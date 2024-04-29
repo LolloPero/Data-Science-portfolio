@@ -12,9 +12,10 @@ from sqlalchemy import create_engine
 
 
 #GLOBALS
-config = get_config(filename="database.ini", section="crypto")
-url_api = "http://api.coincap.io/v2/assets"
-header_api={
+TABLE_NAME_TARGET='crypto_timeseries'
+CONFIG = get_config(filename="database.ini", section="crypto")
+URL_API = "http://api.coincap.io/v2/assets"
+HEADER_API={
             "Content-Type":"application/json",
             "Accept-Encoding":"deflate" 
         }
@@ -25,7 +26,7 @@ def main() -> None:
 
     ##----> ETRACT <----- ##
     #API query
-    response = requests.get(url=url_api, headers=header_api)
+    response = requests.get(url=URL_API, headers=HEADER_API)
 
 
     ##----> TRANSFORM <----- ##
@@ -45,14 +46,14 @@ def main() -> None:
 
     ##----> LOAD <----- ##
     #load data into postresql database
-    conn_string = f"postgresql://{config['user']}:{config['password']}@{config['host']}/{config['database']}"
+    conn_string = f"postgresql://{CONFIG['user']}:{CONFIG['password']}@{CONFIG['host']}/{CONFIG['database']}"
     
     db = create_engine(conn_string) 
     conn = db.connect() 
 
     #Insert Data
     df.to_sql(
-                    name='crypto_timeseries',
+                    name=TABLE_NAME_TARGET,
                     con=conn,
                     if_exists='append',
                     index=True

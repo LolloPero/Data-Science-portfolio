@@ -12,21 +12,14 @@ from database_functions import (
 from datetime import datetime
 
 
-#pyspark custom setup
-os.environ['SPARK_HOME']=r"C:\Users\LPER0055\spark-3.5.1-bin-hadoop3"
-os.environ['HADOOP_HOME']=rf"{os.path.join(os.environ['SPARK_HOME'],'hadoop')}"
-os.environ["PYSPARK_PYTHON"]=r"C:\Users\LPER0055\Miniconda3\python.exe"
-os.environ["PATH"]=";".join([   
-                                fr"{os.environ['PATH']}",
-                                fr"{os.path.join(os.environ['SPARK_HOME'],'bin')}",
-                                fr"{os.path.join(os.environ['HADOOP_HOME'],'bin')}"
-                            ])
 findspark.init()
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import col
 
 
 #GLOBALS
+POSTRESQL_JARFILE=r"/home/ubuntu/spark-3.5.1-bin-hadoop3/postgresql-42.7.3.jar"
+
 TABLE_NAME_TARGET='crypto_timeseries'
 
 CONFIG = get_config(filename="database.ini", section="crypto")
@@ -63,7 +56,7 @@ def main() -> None:
     spark = SparkSession \
         .builder \
         .appName(SPARK_SESSION_NAME) \
-        .config("spark.jars", r"C:\Users\LPER0055\postgresql-42.7.3.jar") \
+        .config("spark.jars", POSTRESQL_JARFILE) \
         .getOrCreate()
 
     print(f"\nSpark is running at: \n{spark._jsc.sc().uiWebUrl().get()}")
