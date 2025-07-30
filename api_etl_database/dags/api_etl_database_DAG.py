@@ -36,14 +36,7 @@ CONFIG_DB = get_config(filename="config.ini", section="crypto")
 CONFIG_API = get_config(filename="config.ini", section="api")
 CONFIG_SPARK= get_config(filename="config.ini", section="apache-spark")
 
-API_URL="https://rest.coincap.io/v3/assets?apiKey={api_key}"
-HEADER_API = {
-            "Content-Type":"application/json",
-            "Accept-Encoding":"deflate" 
-        }
-
 SPARK_SESSION_NAME="main_etl_pyspark"
-POSTRESQL_JARFILE=CONFIG_SPARK['postresql_jar']
 COLUMN_DATATYPES = {
             "timestamp":            "timestamp",
             "id":                   "string",
@@ -66,8 +59,7 @@ COLUMN_DATATYPES = {
 @task()
 def extract():
     #api query
-    api_response = requests.get(url=API_URL.format(api_key=CONFIG_API['api_key']), 
-                        headers=HEADER_API)
+    api_response = requests.get(url=CONFIG_API['url'].format(api_key=CONFIG_API['api_key']))
     api_response_data = api_response.json()
 
     return api_response_data
@@ -103,7 +95,7 @@ def load(df_dict: dict):
     spark = SparkSession \
         .builder \
         .appName(SPARK_SESSION_NAME) \
-        .config("spark.jars", POSTRESQL_JARFILE) \
+        .config("spark.jars", CONFIG_SPARK['postresql_jar']) \
         .getOrCreate()
 
     print(f"\nSpark is running at: \n{spark._jsc.sc().uiWebUrl().get()}")
