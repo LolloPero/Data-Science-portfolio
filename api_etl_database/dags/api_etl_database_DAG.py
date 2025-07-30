@@ -30,30 +30,35 @@ from database_functions import (
     general_query)
 
 #GLOBALS
-POSTRESQL_JARFILE=r"/home/ubuntu/spark-3.5.1-bin-hadoop3/postgresql-42.7.3.jar"
-URL_API = "http://api.coincap.io/v2/assets"
-HEADER_API={
+TABLE_NAME_TARGET='crypto_timeseries'
+
+CONFIG_DB = get_config(filename="config.ini", section="crypto")
+CONFIG_API = get_config(filename="config.ini", section="api")
+CONFIG_SPARK= get_config(filename="config.ini", section="apache-spark")
+
+API_URL="https://rest.coincap.io/v3/assets?apiKey={api_key}"
+HEADER_API = {
             "Content-Type":"application/json",
             "Accept-Encoding":"deflate" 
-            }
-CONFIG = get_config(filename="database.ini", section="crypto")
-SPARK_SESSION_NAME="main_etl_pyspark"
-TABLE_NAME_TARGET='crypto_timeseries'
-COLUMN_DATATYPES = {
-        "timestamp":            "timestamp",
-        "id":                   "string",
-        "rank":                 "int",
-        "symbol":               "string",
-        "name":                 "string",
-        "supply":               "double",
-        "maxsupply":            "double",
-        "marketcapusd":         "double",
-        "volumeusd24hr":        "double",
-        "priceusd":             "double",
-        "changepercent24hr":    "double",
-        "vwap24hr":             "double",
-        "explorer":             "string"
         }
+
+SPARK_SESSION_NAME="main_etl_pyspark"
+POSTRESQL_JARFILE=CONFIG_SPARK['postresql_jar']
+COLUMN_DATATYPES = {
+            "timestamp":            "timestamp",
+            "id":                   "string",
+            "rank":                 "int",
+            "symbol":               "string",
+            "name":                 "string",
+            "supply":               "double",
+            "maxsupply":            "double",
+            "marketcapusd":         "double",
+            "volumeusd24hr":        "double",
+            "priceusd":             "double",
+            "changepercent24hr":    "double",
+            "vwap24hr":             "double",
+            "explorer":             "string"
+            }
 
 
 #Define tasks
@@ -61,7 +66,8 @@ COLUMN_DATATYPES = {
 @task()
 def extract():
     #api query
-    api_response = requests.get(url=URL_API, headers=HEADER_API)
+    api_response = requests.get(url=API_URL.format(api_key=CONFIG_API['api_key']), 
+                        headers=HEADER_API)
     api_response_data = api_response.json()
 
     return api_response_data
@@ -81,6 +87,9 @@ def transform(api_response_data: dict):
     #rename columns to lowercase
     rename_cols_dict={c:c.lower() for c in df.columns.tolist()}
     df.rename(columns=rename_cols_dict, inplace=True)
+
+    #drop columns with tokens*
+    df = df.loc[:, ~df.columns.str.startswith("tokens.")]
 
     df_dict = df.to_dict('dict')
     return df_dict    
@@ -113,10 +122,10 @@ def load(df_dict: dict):
     ##----> LOAD <----- ##
     print(f"\nLOAD..")
     #connect Spark to to postgreSQL database
-    url_db = f"jdbc:postgresql://{CONFIG['host']}:{CONFIG['port']}/{CONFIG['database']}"
+    url_db = f"jdbc:postgresql://{CONFIG_DB['host']}:{CONFIG_DB['port']}/{CONFIG_DB['database']}"
     properties_dbspark = {
-            "user":     f"{CONFIG['user']}",
-            "password": f"{CONFIG['password']}",
+            "user":     f"{CONFIG_DB['user']}",
+            "password": f"{CONFIG_DB['password']}",
             "driver":   "org.postgresql.Driver"
         }
 
@@ -142,9 +151,9 @@ def load(df_dict: dict):
 
 with DAG(   dag_id="api_etl_database_dag",
             schedule="0 0 * * *", 
-            start_date=pendulum.datetime(2024, 4, 25, tz="Europe/Copenhagen"),
-            catchup=False,  
-            tags=["api_etl_databse_TAG"]) as dag:
+            start_date=pendulum.datetime(2025, 7, 28, tz="Europe/Helsinki"),
+            catchup=True,  
+            tags=["api_etl_database_TAG"]) as dag:
 
     api_response = extract() 
 

@@ -1,3 +1,5 @@
 __pycache__/
 database.ini
 notebooks
+.venv/
+.vscode/
