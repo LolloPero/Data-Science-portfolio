@@ -1,6 +1,5 @@
 __pycache__/
 config.ini
 airflow_setup.sh
-notebooks
 .venv/
 .vscode/
