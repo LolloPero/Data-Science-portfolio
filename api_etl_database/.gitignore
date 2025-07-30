@@ -1,5 +1,6 @@
 __pycache__/
-database.ini
+config.ini
+airflow_setup.sh
 notebooks
 .venv/
 .vscode/
