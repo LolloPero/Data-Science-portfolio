@@ -29,3 +29,44 @@ Data extracted and loaded into the database contain the following fields:
 ![](docs/etl_pipeline.png)
 
 ## Setup
+
+### 0) Prerequisites
+Make sure the following softwares have been installed on your local machine:
+- [Python 3.9.6 ](https://www.python.org/downloads/release/python-396/)
+- [Postgresql 16.3 ](https://www.postgresql.org/download/)
+- [Apache Spark 3.5.4](https://spark.apache.org/releases/spark-release-3-5-4.html)
+
+Make sure the setup is correct by executing their respective command line tools:
+```shell
+#Python
+python --version
+
+#Apache Spark
+pyspark --version
+
+#PostreSQL
+psql --version
+```
+
+### 1) Virtual env
+Prepare the Python virtual environment by:
+```shell
+pip install -r requirements.txt
+```
+
+## Execution
+You can manually execute the notebooks under *notebooks* via Code Editors (such as VS Code) and selecting the virtual env created at 1).
+
+To execute the Airlflow Dag:
+- make sure the DAG is findable by your AIrflow installation:
+```shell
+export AIRFLOW__CORE__DAGS_FOLDER= <path to your repo instance>/dags
+```
+
+- Then, start the scheduler and webserver:
+```shell
+airflow scheduler
+airflow webserver --port 8080
+```
+
+- Finally, trigger the *api_etl_pipeline_dag* manually from Airflow UI.
